@@ -25,10 +25,10 @@ const reportToSpamVerify = async (logData, categories, comment) => {
 			comment,
 		}, { headers: { 'Api-Key': SPAMVERIFY_API_KEY } });
 
-		log(0, `Reported ${logData.srcIp} [${logData.dpt}/${logData.proto}]; ID: ${logData.id}; Categories: ${categories}; Threat score: ${res.ip.threat_score}%`);
+		log(0, `Reported ${logData.srcIp} [${logData.dpt}/${logData.proto}]; ID: ${logData.id}; Categories: ${categories}; Threat score: ${res?.ip?.threat_score}%`);
 		return true;
 	} catch (err) {
-		log(2, `Failed to report ${logData.srcIp} [${logData.dpt}/${logData.proto}]; ID: ${logData.id}; ${err.message}\n${JSON.stringify(err.response.data?.errors || err.response.data)}`);
+		log(2, `Failed to report ${logData.srcIp} [${logData.dpt}/${logData.proto}]; ID: ${logData.id}; ${err.message}\n${JSON.stringify(err.response.data?.errors || err.response?.data)}`);
 		return false;
 	}
 };
