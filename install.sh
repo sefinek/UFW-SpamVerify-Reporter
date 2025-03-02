@@ -163,7 +163,7 @@ cd /opt || { echo "❌ Failed to change directory to '/opt'. Exiting..."; exit 1
 
 if [ ! -d "UFW-SpamVerify-Reporter" ]; then
     echo "📥 Cloning the UFW-SpamVerify-Reporter repository..."
-    sudo git clone https://github.com/sefinek/UFW-SpamVerify-Reporter.git || { echo "❌ Failed to clone the repository. Exiting..."; exit 1; }
+    sudo git clone https://github.com/sefinek/UFW-SpamVerify-Reporter.git --recurse-submodules || { echo "❌ Failed to clone the repository. Exiting..."; exit 1; }
 else
     echo "✨ The UFW-SpamVerify-Reporter repository already exists"
 fi
