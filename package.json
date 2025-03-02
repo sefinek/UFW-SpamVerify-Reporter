@@ -1,6 +1,6 @@
 {
   "name": "ufw-spamverify-reporter",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "description": "A tool (with a simple installer) that monitors UFW firewall logs in real time and reports IP addresses to the SpamVerify database.",
   "keywords": [
     "ufw",
