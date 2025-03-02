@@ -62,26 +62,26 @@ https://github.com/sefinek/UFW-SpamVerify-Reporter`; // Please do not remove thi
 // See: https://spamverify.readme.io/reference/categories
 const categories = {
 	TCP: {
-		22: '14,22,18', // Port Scan | SSH | Brute-Force
-		80: '14,21', // Port Scan | Web App Attack
-		443: '14,21', // Port Scan | Web App Attack
-		8080: '14,21', // Port Scan | Web App Attack
-		25: '14,11', // Port Scan | Email Spam
-		21: '14,5,18', // Port Scan | FTP Brute-Force | Brute-Force
-		53: '14,1,2', // Port Scan | DNS Compromise | DNS Poisoning
-		23: '14,15,18', // Port Scan | Hacking | Brute-Force
-		3389: '14,15,18', // Port Scan | Hacking | Brute-Force
-		3306: '14,16', // Port Scan | SQL Injection
-		6666: '14,8', // Port Scan | Fraud VoIP
-		6667: '14,8', // Port Scan | Fraud VoIP
-		6668: '14,8', // Port Scan | Fraud VoIP
-		6669: '14,8', // Port Scan | Fraud VoIP
-		9999: '14,6', // Port Scan | Ping of Death
+		22: '8,14,10', // Port Scan | SSH | Brute Force
+		80: '8,13', // Port Scan | Web App Attack
+		443: '8,13', // Port Scan | Web App Attack
+		8080: '8,13', // Port Scan | Web App Attack
+		25: '8,7', // Port Scan | Email Spam
+		21: '8,16,10', // Port Scan | FTP Brute Force | Brute Force
+		53: '8,1,2', // Port Scan | DNS Compromise | DNS Poisoning
+		23: '8,22,10', // Port Scan | Hacking | Brute Force
+		3389: '8,22,10', // Port Scan | Hacking | Brute Force
+		3306: '8,23', // Port Scan | SQL Injection
+		6666: '8,19', // Port Scan | Fraud VoIP
+		6667: '8,19', // Port Scan | Fraud VoIP
+		6668: '8,19', // Port Scan | Fraud VoIP
+		6669: '8,19', // Port Scan | Fraud VoIP
+		9999: '8,17', // Port Scan | Ping of Death
 	},
 	UDP: {
-		53: '14,1,2', // Port Scan | DNS Compromise | DNS Poisoning
-		123: '14,17', // Port Scan | Spoofing
+		53: '8,1,2', // Port Scan | DNS Compromise | DNS Poisoning
+		123: '8,9', // Port Scan | Spoofing
 	},
 };
 
-exports.DETERMINE_CATEGORIES = ({ proto, dpt }) => categories[proto]?.[dpt] || '14'; // Default: Port Scan
+exports.DETERMINE_CATEGORIES = ({ proto, dpt }) => categories[proto]?.[dpt] || '8'; // Default: Port Scan
