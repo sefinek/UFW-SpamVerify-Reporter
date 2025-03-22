@@ -5,11 +5,11 @@
 
 const fs = require('node:fs');
 const chokidar = require('chokidar');
-const isLocalIP = require('./scripts/utils/isLocalIP.js');
+const parseTimestamp = require('./scripts/utils/parseTimestamp.js');
 const { reportedIPs, loadReportedIPs, saveReportedIPs, isIPReportedRecently, markIPAsReported } = require('./scripts/services/cache.js');
 const log = require('./scripts/utils/log.js');
 const axios = require('./scripts/services/axios.js');
-const serverAddress = require('./scripts/services/fetchServerIP.js');
+const { refreshServerIPs, getServerIPs } = require('./scripts/services/ipFetcher.js');
 const discordWebhooks = require('./scripts/services/discord.js');
 const config = require('./config.js');
 const { version } = require('./package.json');
@@ -28,60 +28,62 @@ const reportToSpamVerify = async (logData, categories, comment) => {
 		log(0, `Reported ${logData.srcIp} [${logData.dpt}/${logData.proto}]; ID: ${logData.id}; Categories: ${categories}; Threat score: ${res?.data?.threat_score}%`);
 		return true;
 	} catch (err) {
-		log(2, `Failed to report ${logData.srcIp} [${logData.dpt}/${logData.proto}]; ID: ${logData.id}; ${err.message}\n${JSON.stringify(err.response.data?.errors || err.response?.data)}`);
+		log(2, `Failed to report ${logData.srcIp} [${logData.dpt}/${logData.proto}]; ID: ${logData.id}; ${err.message}\n${JSON.stringify(err.response.data?.errors || err.response.data)}`);
 		return false;
 	}
 };
 
-const processLogLine = async line => {
-	if (!line.includes('[UFW BLOCK]')) return log(0, `Ignoring line: ${line}`);
+const toNumber = (str, regex) => {
+	const parsed = str.match(regex)?.[1];
+	return parsed ? Number(parsed) : parsed;
+};
 
-	const timestampMatch = line.match(/\[(\d+\.\d+)]/);
+const processLogLine = async (line, test = false) => {
+	if (!line.includes('[UFW BLOCK]')) return log(0, `Ignoring invalid line: ${line}`);
+
 	const logData = {
-		timestampOld: line.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:[+-]\d{2}:\d{2})?/)?.[0] || null,
-		timestampNew: (timestampMatch ? parseFloat(timestampMatch[1]) : null) || null,
-		In:           line.match(/IN=([\d.]+)/)?.[1] || null,
-		Out:          line.match(/OUT=([\d.]+)/)?.[1] || null,
-		srcIp:        line.match(/SRC=([\d.]+)/)?.[1] || null,
-		dstIp:        line.match(/DST=([\d.]+)/)?.[1] || null,
-		res:          line.match(/RES=(\S+)/)?.[1] || null,
-		tos:          line.match(/TOS=(\S+)/)?.[1] || null,
-		prec:         line.match(/PREC=(\S+)/)?.[1] || null,
-		ttl:          line.match(/TTL=(\d+)/)?.[1] || null,
-		id:           line.match(/ID=(\d+)/)?.[1] || null,
-		proto:        line.match(/PROTO=(\S+)/)?.[1] || null,
-		spt:          line.match(/SPT=(\d+)/)?.[1] || null,
-		dpt:          line.match(/DPT=(\d+)/)?.[1] || null,
-		len:          line.match(/LEN=(\d+)/)?.[1] || null,
-		urgp:         line.match(/URGP=(\d+)/)?.[1] || null,
-		mac:          line.match(/MAC=([\w:]+)/)?.[1] || null,
-		window:       line.match(/WINDOW=(\d+)/)?.[1] || null,
-		syn:          !!line.includes('SYN'),
+		date: parseTimestamp(line), // Log timestamp
+		srcIp: line.match(/SRC=([\d.]+)/)?.[1] || null, // Source IP address
+		dstIp: line.match(/DST=([\d.]+)/)?.[1] || null, // Destination IP address
+		proto: line.match(/PROTO=(\S+)/)?.[1] || null, // Protocol (TCP, UDP, etc.)
+		spt: toNumber(line, /SPT=(\d+)/), // Source port
+		dpt: toNumber(line, /DPT=(\d+)/), // Destination port
+		in: line.match(/IN=(\w+)/)?.[1] || null, // Input interface
+		out: line.match(/OUT=(\w+)/)?.[1] || null, // Output interface
+		mac: line.match(/MAC=([\w:]+)/)?.[1] || null, // MAC address
+		len: toNumber(line, /LEN=(\d+)/), // Packet length
+		ttl: toNumber(line, /TTL=(\d+)/), // Time to live
+		id: toNumber(line, /ID=(\d+)/), // Packet ID
+		tos: line.match(/TOS=(\S+)/)?.[1] || null, // Type of service
+		prec: line.match(/PREC=(\S+)/)?.[1] || null, // Precedence
+		res: line.match(/RES=(\S+)/)?.[1] || null, // Reserved bits
+		window: toNumber(line, /WINDOW=(\d+)/), // TCP Window size
+		urgp: toNumber(line, /URGP=(\d+)/), // Urgent pointer
+		ack: !!line.includes('ACK'), // ACK flag
+		syn: !!line.includes('SYN'), // SYN flag
 	};
 
 	const { srcIp, proto, dpt } = logData;
 	if (!srcIp) {
-		log(1, `Missing SRC in log line: ${line}`);
-		return;
+		return log(2, `Missing SRC in the log line: ${line}`);
 	}
 
-	if (serverAddress().includes(srcIp)) {
-		log(0, `Ignoring own IP address: ${srcIp}`);
-		return;
+	const ips = getServerIPs();
+	if (!Array.isArray(ips)) {
+		return log(2, 'For some reason, \'ips\' is not an array');
 	}
 
-	if (isLocalIP(srcIp)) {
-		log(0, `Ignoring local/private IP: ${srcIp}`);
-		return;
+	if (ips.includes(srcIp)) {
+		return log(0, `Ignoring own IP address! PROTO=${proto?.toLowerCase()} SRC=${srcIp} DPT=${dpt} ID=${logData.id}`);
 	}
 
-	// Report MUST NOT be of an attack where the source address is likely spoofed i.e. SYN floods and UDP floods.
-	// TCP connections can only be reported if they complete the three-way handshake. UDP connections cannot be reported.
-	// More: https://www.spamverify.com/reporting-policy
+	// UDP connections cannot be reported.
 	if (proto === 'UDP') {
-		log(0, `Skipping UDP traffic: SRC=${srcIp} DPT=${dpt}`);
-		return;
+		return log(0, `Skipping UDP traffic: SRC=${srcIp} DPT=${dpt}`);
 	}
+
+	// Tests
+	if (test) return logData;
 
 	if (isIPReportedRecently(srcIp)) {
 		const lastReportedTime = reportedIPs.get(srcIp);
@@ -113,12 +115,16 @@ const processLogLine = async line => {
 };
 
 (async () => {
-	log(0, `v${version} (https://github.com/sefinek/UFW-SpamVerify-Reporter)`);
+	log(0, `Version ${version} - https://github.com/sefinek/UFW-SpamVerify-Reporter`);
 
 	loadReportedIPs();
 
+	log(0, 'Trying to fetch your IPv4 and IPv6 address from api.sefinek.net...');
+	await refreshServerIPs();
+	log(0, `Fetched ${getServerIPs()?.length} of your IP addresses. If any of them accidentally appear in the UFW logs, they will be ignored.`);
+
 	if (!fs.existsSync(UFW_LOG_FILE)) {
-		log(2, `Log file ${UFW_LOG_FILE} does not exist.`);
+		log(2, `Log file ${UFW_LOG_FILE} does not exist`);
 		return;
 	}
 
@@ -129,7 +135,7 @@ const processLogLine = async line => {
 			const stats = fs.statSync(path);
 			if (stats.size < fileOffset) {
 				fileOffset = 0;
-				log(1, 'The file has been truncated, and the offset has been reset.');
+				log(1, 'The file has been truncated, and the offset has been reset');
 			}
 
 			fs.createReadStream(path, { start: fileOffset, encoding: 'utf8' }).on('data', chunk => {
@@ -140,13 +146,16 @@ const processLogLine = async line => {
 		});
 
 	// Auto updates
-	if (AUTO_UPDATE_ENABLED && AUTO_UPDATE_SCHEDULE) await require('./scripts/services/updates.js')();
+	if (AUTO_UPDATE_ENABLED && AUTO_UPDATE_SCHEDULE && SERVER_ID !== 'development') await require('./scripts/services/updates.js')();
 	if (DISCORD_WEBHOOKS_ENABLED && DISCORD_WEBHOOKS_URL) await require('./scripts/services/summaries.js')();
 
-	await discordWebhooks(0, `[UFW-SpamVerify-Reporter](https://github.com/sefinek/UFW-SpamVerify-Reporter) has been successfully launched on the device \`${SERVER_ID}\`.`);
+	// Final
+	if (SERVER_ID !== 'development') {
+		await discordWebhooks(0, `[UFW-SpamVerify-Reporter](https://github.com/sefinek/UFW-SpamVerify-Reporter) has been successfully launched on the device \`${SERVER_ID}\`.`);
+	}
 
 	log(0, `Ready! Now monitoring: ${UFW_LOG_FILE}`);
-	log(0, '=====================================================================');
-
 	process.send && process.send('ready');
 })();
+
+module.exports = processLogLine;

@@ -1,9 +1,10 @@
 exports.MAIN = {
-	// This server
+	// My Server
 	UFW_LOG_FILE: '/var/log/ufw.log',
 	CACHE_FILE: '/tmp/ufw-spamverify-reporter.cache',
 	SERVER_ID: null, // The server name that will be visible in the reports (e.g., 'homeserver1'). If you don't want to define it, leave the value as null.
-	IP_REFRESH_INTERVAL: 10 * 60 * 1000, // How often should (every 10 minutes) the script check the server's IP address to avoid accidental self-reports?
+	IP_REFRESH_SCHEDULE: '0 */6 * * *', // CRON: How often should the script check the IP address assigned by the ISP to prevent accidental self-reporting? Default: every 6 hours
+	IPv6_SUPPORT: true, // Specifies whether the device has been assigned an IPv6 address.
 
 	// Reporting
 	SPAMVERIFY_API_KEY: '', // Secret API key for SpamVerify.
@@ -11,37 +12,16 @@ exports.MAIN = {
 
 	// Automatic Updates
 	AUTO_UPDATE_ENABLED: true, // Do you want the script to automatically update to the latest version using 'git pull'? (true = enabled, false = disabled)
-	AUTO_UPDATE_SCHEDULE: '0 18 * * *', // Schedule for automatic script updates (CRON format). Default: every day at 18:00
+	AUTO_UPDATE_SCHEDULE: '0 18 * * *', // CRON: Schedule for automatic script updates. Default: every day at 18:00
 
 	// Discord Webhooks
-	DISCORD_WEBHOOKS_ENABLED: false,
-	DISCORD_WEBHOOKS_URL: '',
+	DISCORD_WEBHOOKS_ENABLED: false, // Should the script send webhooks? They will contain error reports, daily summaries related to reports, etc.
+	DISCORD_WEBHOOKS_URL: '', // Webhook URL.
 };
 
 
 /**
  * Generates a report submission to SpamVerify.
- * @param {Object} logData
- * @param {string|null} logData.timestamp
- * @param {string|null} logData.In
- * @param {string|null} logData.Out
- * @param {string|null} logData.srcIp
- * @param {string|null} logData.dstIp
- * @param {string|null} logData.res
- * @param {string|null} logData.tos
- * @param {string|null} logData.prec
- * @param {string|null} logData.ttl
- * @param {string|null} logData.id
- * @param {string|null} logData.proto
- * @param {string|null} logData.spt
- * @param {string|null} logData.dpt
- * @param {string|null} logData.len
- * @param {string|null} logData.urgp
- * @param {string|null} logData.mac
- * @param {string|null} logData.window
- * @param {boolean} logData.syn
- * @param {string|null} fullLog
- * @param {string|null} serverName
  * @returns {string} A formatted string report.
  */
 exports.REPORT_COMMENT = ({ timestamp, In, Out, srcIp, dstIp, res, tos, prec, ttl, id, proto, spt, dpt, len, urgp, mac, window, syn }, fullLog, serverName) =>
@@ -67,10 +47,7 @@ const categories = {
 		6669: '8,19', // Port Scan | Fraud VoIP
 		9999: '8,17', // Port Scan | Ping of Death
 	},
-	UDP: {
-		53: '8,1,2', // Port Scan | DNS Compromise | DNS Poisoning
-		123: '8,9', // Port Scan | Spoofing
-	},
+	UDP: {},
 };
 
 exports.DETERMINE_CATEGORIES = ({ proto, dpt }) => categories[proto]?.[dpt] || '8'; // Default: Port Scan
