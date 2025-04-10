@@ -29,7 +29,7 @@ const reportToSpamVerify = async (logData, categories, comment) => {
 		log(0, `Reported ${logData.srcIp} [${logData.dpt}/${logData.proto}]; ID: ${logData.id}; Categories: ${categories}; Abuse: ${res.data.threat_score}%`);
 		return true;
 	} catch (err) {
-		log(2, `Failed to report ${logData.srcIp} [${logData.dpt}/${logData.proto}]; ID: ${logData.id}; ${err.response?.data?.errors ? `\n${JSON.stringify(err.response.data.errors)}` : err.message}`, 1);
+		log(err.response?.status === 429 ? 0 : 2, `Failed to report ${logData.srcIp} [${logData.dpt}/${logData.proto}]; ID: ${logData.id}; ${err.response?.data?.errors ? `\n${JSON.stringify(err.response.data.errors)}` : err.message}`, 1);
 		return false;
 	}
 };
