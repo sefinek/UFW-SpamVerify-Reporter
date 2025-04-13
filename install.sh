@@ -198,6 +198,14 @@ else
     exit 1
 fi
 
+# Create logs directory
+echo "📂 Creating /var/log/ufw-spamverify directory..."
+sudo mkdir -p /var/log/ufw-spamverify
+sudo chown "$USER":"$USER" /var/log/ufw-spamverify -R
+
+# Change permissions for UFW log file
+echo "🔒 Changing permissions for $ufw_log_path..."
+sudo chmod 644 "$ufw_log_path"
 
 # Install pm2
 echo "📦 Installing PM2..."
