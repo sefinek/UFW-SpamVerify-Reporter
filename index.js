@@ -11,7 +11,7 @@ const log = require('./scripts/utils/log.js');
 const { post } = require('./scripts/services/axios.js');
 const { reportedIPs, loadReportedIPs, saveReportedIPs, isIPReportedRecently, markIPAsReported } = require('./scripts/services/cache.js');
 const { refreshServerIPs, getServerIPs } = require('./scripts/services/ipFetcher.js');
-const discordWebhooks = require('./scripts/services/discord.js');
+const sendWebhook = require('./scripts/services/discordWebhooks.js');
 const config = require('./config.js');
 const { version } = require('./package.json');
 const { UFW_LOG_FILE, SPAMVERIFY_API_KEY, SERVER_ID, AUTO_UPDATE_ENABLED, AUTO_UPDATE_SCHEDULE, DISCORD_WEBHOOKS_ENABLED, DISCORD_WEBHOOKS_URL } = config.MAIN;
@@ -156,7 +156,7 @@ const processLogLine = async (line, test = false) => {
 
 	// Final
 	if (SERVER_ID !== 'development') {
-		await discordWebhooks(0, `[UFW-SpamVerify-Reporter](https://github.com/sefinek/UFW-SpamVerify-Reporter) has been successfully launched on the device \`${SERVER_ID}\`.`);
+		await sendWebhook(0, `[UFW-SpamVerify-Reporter](https://github.com/sefinek/UFW-SpamVerify-Reporter) has been successfully launched on the device \`${SERVER_ID}\`.`);
 	}
 
 	log(0, `Ready! Now monitoring: ${UFW_LOG_FILE}`);
