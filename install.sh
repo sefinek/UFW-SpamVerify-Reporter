@@ -139,6 +139,7 @@ while true; do
         server_id=null
         break
     elif [[ $server_id =~ ^[A-Za-z0-9]{1,16}$ ]]; then
+        server_id="'$server_id'"
         break
     else
         echo "❌ It must be 1-16 characters long, contain only letters and numbers, and have no spaces or special characters."
@@ -190,9 +191,9 @@ fi
 config_file="config.js"
 if [[ -f $config_file ]]; then
     echo "🔧 Updating $PWD/$config_file..."
-    sed -i "s|UFW_LOG_FILE: .*|UFW_LOG_FILE: '$ufw_log_path',|" $config_file
-    sed -i "s|SERVER_ID: .*|SERVER_ID: '$server_id',|" $config_file
-    sed -i "s|SPAMVERIFY_API_KEY: .*|SPAMVERIFY_API_KEY: '$api_token',|" $config_file
+    sed -i "s|UFW_LOG_FILE: .*|UFW_LOG_FILE: '$ufw_log_path',|" "$config_file"
+    sed -i "s|SERVER_ID: .*|SERVER_ID: $server_id,|" "$config_file"
+    sed -i "s|SPAMVERIFY_API_KEY: .*|SPAMVERIFY_API_KEY: '$api_token',|" "$config_file"
 else
     echo "❌ $config_file not found. Make sure the repository was cloned and initialized correctly."
     exit 1
@@ -211,7 +212,7 @@ sudo chmod 644 "$ufw_log_path"
 
 # Install pm2
 echo "📦 Installing PM2..."
-sudo npm install pm2 -g -silent
+sudo npm install pm2 -g --silent
 
 
 # Configure PM2
