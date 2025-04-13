@@ -20,12 +20,14 @@ Also, check this out: [sefinek/Cloudflare-WAF-To-AbuseIPDB](https://github.com/s
 ## ✅ Features
 1. **Easy Configuration** – The [`config.js`](config.default.js) file allows for quick and simple customization.
 2. **Simple Installer** – Enables fast and seamless integration deployment.
-3. **Self-IP Protection (IPv4 & IPv6)** – The script will never report an IP address belonging to you or your server, even if you use a dynamic IP.
-4. **Discord Webhooks Integration**:
-    - Important notifications.
-    - Alerts for script errors.
-    - Daily summaries of reported IP addresses.
-5. **Automatic Updates** – The script regularly fetches and applies the latest updates. If you want, you can [disable it](https://github.com/sefinek/UFW-SpamVerify-Reporter/blob/main/config.default.js#L13), of course.
+3. **Bulk Reporting Support** – If the script encounters a rate limit, it will start buffering collected IPs and send a bulk report.
+4. **Self-IP Protection (IPv4 & IPv6)** – The script will never report IP addresses belonging to you or your server, even if you're using a dynamic IP address.
+5. **Local IP Filtering (beta)** – Local IP addresses will never be reported.
+6. **Discord Webhooks Integration**:
+   - Critical notifications
+   - Script error alerts
+   - Daily summaries of reported IPs
+7. **Automatic Updates** – The script regularly fetches and applies the latest updates. You can [disable this](https://github.com/sefinek/UFW-AbuseIPDB-Reporter/blob/main/config.default.js#L14) if you prefer.
 
 
 ## 📥 Installation (Ubuntu & Debian)
