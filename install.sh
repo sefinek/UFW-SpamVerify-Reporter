@@ -201,8 +201,8 @@ fi
 
 # Create directories & set permissions
 echo "📂 Creating directories and setting permissions..."
-sudo mkdir -p /var/log/ufw-abuseipdb
-sudo chown -R "$USER":"$USER" /var/log/ufw-abuseipdb
+sudo mkdir -p /var/log/ufw-spamverify
+sudo chown -R "$USER":"$USER" /var/log/ufw-spamverify
 sudo mkdir -p /var/cache/sefinek
 sudo chown -R "$USER":"$USER" /var/cache/sefinek
 
