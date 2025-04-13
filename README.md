@@ -80,7 +80,7 @@ pm2 save
 After a successful installation, the script will run continuously in the background, monitoring UFW logs and automatically reporting IP addresses.
 
 Servers are constantly scanned by bots, usually looking for security vulnerabilities and similar weaknesses.
-So don't be surprised if the number of reports sent to AbuseIPDB exceeds a thousand the next day.
+So don't be surprised if the number of reports sent to SpamVerify exceeds a thousand the next day.
 
 ### 🔍 Checking logs
 ```bash

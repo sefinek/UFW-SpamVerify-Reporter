@@ -82,9 +82,7 @@ const processLogLine = async (line, test = false) => {
 		return log(0, `Ignoring local IP address! PROTO=${proto?.toLowerCase()} SRC=${srcIp} DPT=${dpt} ID=${data.id}`, 1);
 	}
 
-	// Report MUST NOT be of an attack where the source address is likely spoofed i.e. SYN floods and UDP floods.
-	// TCP connections can only be reported if they complete the three-way handshake. UDP connections cannot be reported.
-	// Read more: https://www.abuseipdb.com/reporting-policy
+	// Only TCP traffic can be reported.
 	if (proto === 'UDP') {
 		return log(0, `Skipping UDP traffic: SRC=${srcIp} DPT=${dpt}`);
 	}
