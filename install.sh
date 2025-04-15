@@ -6,24 +6,19 @@
 ##################################################################
 
 cat << "EOF"
-              _____                       __      __          _   __
-             / ____|                      \ \    / /         (_) / _|
-            | (___   _ __    __ _  _ __ ___\ \  / /___  _ __  _ | |_  _   _
-             \___ \ | '_ \  / _` || '_ ` _ \\ \/ // _ \| '__|| ||  _|| | | |
-             ____) || |_) || (_| || | | | | |\  /|  __/| |   | || |  | |_| |
-            |_____/ | .__/  \__,_||_| |_| |_| \/  \___||_|   |_||_|   \__, |
-                    | |                                                __/ |
-                    |_|                                               |___/
-               _         _                            _    _
-              (_)       | |                          | |  (_)
-              _  _ __  | |_  ___   __ _  _ __  __ _ | |_  _   ___   _ __
-             | || '_ \ | __|/ _ \ / _` || '__|/ _` || __|| | / _ \ | '_ \
-             | || | | || |_|  __/| (_| || |  | (_| || |_ | || (_) || | | |
-             |_||_| |_| \__|\___| \__, ||_|   \__,_| \__||_| \___/ |_| |_|
-                                   __/ |
-                                   |___/
+              _      _                            ___   ____    ____    ____
+             / \    | |__    _   _   ___    ___  |_ _| |  _ \  |  _ \  | __ )
+            / _ \   | '_ \  | | | | / __|  / _ \  | |  | |_) | | | | | |  _ \
+           / ___ \  | |_) | | |_| | \__ \ |  __/  | |  |  __/  | |_| | | |_) |
+          /_/   \_\_|_.__/ _ \__,_| |___/  \___| |___| |_|     |____/  |____/
 
-                 >> Made by sefinek.net || Last update: 20.03.2025 <<
+                  (_)_ __ | |_ ___  __ _ _ __ __ _| |_(_) ___  _ __
+                   | | '_ \| __/ _ \/ _` | '__/ _` | __| |/ _ \| '_ \
+                   | | | | | ||  __/ (_| | | | (_| | |_| | (_) | | | |
+                   |_|_| |_|\__\___|\__, |_|  \__,_|\__|_|\___/|_| |_|
+                                    |___/
+
+                 >> Made by sefinek.net || Last update: 13.04.2025 <<
 
 This installer will configure UFW-SpamVerify-Reporter, a tool that analyzes UFW logs and
 reports to SpamVerify the IP addresses that have violated firewall rules. Join my Discord
@@ -47,16 +42,38 @@ yes_no_prompt() {
 
 # Function to check and install missing dependencies
 check_dependencies() {
-    local dependencies=(curl node git)
+    local dependencies=("$@")
     local missing=()
+
+    # Helper: install dependency
+    install_dep() {
+        local dep=$1
+        case $dep in
+            node)
+                curl -fsSL https://deb.nodesource.com/setup_22.x -o nodesource_setup.sh
+                sudo bash nodesource_setup.sh
+                sudo apt-get install -y nodejs
+                rm -f nodesource_setup.sh
+                ;;
+            git)
+                check_dependencies software-properties-common
+                sudo add-apt-repository -y ppa:git-core/ppa
+                sudo apt-get update
+                sudo apt-get install -y git
+                ;;
+            *)
+                sudo apt-get install -y "$dep"
+                ;;
+        esac
+    }
 
     for dependency in "${dependencies[@]}"; do
         if ! command -v "$dependency" &> /dev/null; then
             missing+=("$dependency")
         else
             echo "✅ $dependency is installed ($(command -v "$dependency"))"
-            if $dependency --version &> /dev/null; then
-                $dependency --version
+            if "$dependency" --version &> /dev/null; then
+                "$dependency" --version | head -n 1
             else
                 echo "ℹ️ Version information for $dependency is unavailable"
             fi
@@ -64,14 +81,10 @@ check_dependencies() {
     done
 
     if [[ ${#missing[@]} -gt 0 ]]; then
-        echo "🚨 Missing dependencies: ${missing[*]}"
+        echo "🚨 Found missing dependencies: ${missing[*]}"
         for dep in "${missing[@]}"; do
             if yes_no_prompt "📦 Do you want to install $dep?"; then
-                case $dep in
-                    curl ) sudo apt-get install -y curl ;;
-                    node ) curl -fsSL https://deb.nodesource.com/setup_22.x -o nodesource_setup.sh && sudo bash nodesource_setup.sh && sudo apt-get install -y nodejs && rm -f nodesource_setup.sh ;;
-                    git ) sudo add-apt-repository ppa:git-core/ppa && sudo apt-get update && sudo apt-get -y install git ;;
-                esac
+                install_dep "$dep" || { echo "❌ Installation failed for $dep. Exiting..."; exit 1; }
             else
                 echo "❌ Cannot proceed without $dep. Exiting..."
                 exit 1
@@ -83,7 +96,7 @@ check_dependencies() {
 }
 
 # Check dependencies before proceeding
-check_dependencies
+check_dependencies curl node git
 
 # Function to validate SpamVerify API key
 validate_token() {
@@ -109,6 +122,31 @@ validate_token() {
     fi
 }
 
+# Prepare UFW
+echo "🔧 Preparing UFW..."
+UFW_STATUS=$(LANG=C sudo ufw status verbose)
+if ! grep -q "^Status: active" <<< "$UFW_STATUS"; then
+    echo "❌ UFW appears to be inactive. Do you want to enable it?"
+    if yes_no_prompt "🔧 Would you like to enable UFW now?"; then
+        sudo ufw enable
+        echo "✅ UFW has been successfully enabled"
+        UFW_STATUS=$(LANG=C sudo ufw status verbose)
+    else
+        echo "❌ UFW is required to proceed. Exiting..."
+        exit 1
+    fi
+fi
+
+if ! grep -q "^Logging: on (" <<< "$UFW_STATUS"; then
+    echo "🔧 Enabling UFW logging (low)..."
+    sudo ufw logging low
+
+    echo "⏳ Waiting a moment for the ufw.log file to be created..."
+    sleep 5
+else
+    echo "✅ UFW logging is already enabled"
+fi
+
 # Check for UFW log file
 if [[ ! -f /var/log/ufw.log ]]; then
     read -r -p "🔍 /var/log/ufw.log not found. Please enter the path to your log file: " ufw_log_path
@@ -123,7 +161,7 @@ else
     echo "✅ /var/log/ufw.log exists"
 fi
 
-# Prompt for SpamVerify API token
+# Prompt for API token
 while true; do
     read -r -p "🔑 Please enter your SpamVerify API token: " api_token
     if validate_token "$api_token"; then
@@ -210,7 +248,8 @@ sudo chown -R "$USER":"$USER" /var/cache/sefinek
 echo "🔒 Changing permissions for $ufw_log_path..."
 sudo chmod 644 "$ufw_log_path"
 
-# Install pm2
+
+# Install PM2
 echo "📦 Installing PM2..."
 sudo npm install pm2 -g --silent
 
