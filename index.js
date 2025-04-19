@@ -31,7 +31,7 @@ const reportIp = async (data, categories, comment) => {
 	} catch (err) {
 		log(
 			err.response?.status === 429 ? 0 : 2,
-			`Failed to report ${data.srcIp} [${data.dpt}/${data.proto}]; ID: ${data.id}; ${err.response?.data?.errors ? `\n${JSON.stringify(err.response.data.errors)}` : err.message}`,
+			`Failed to report ${data.srcIp} [${data.dpt}/${data.proto}]; ID: ${data.id}; ${err.response?.data ? `\n${JSON.stringify(err.response.data)}` : err.message}`,
 			err.response?.status === 429 ? 0 : 1
 		);
 		return false;
