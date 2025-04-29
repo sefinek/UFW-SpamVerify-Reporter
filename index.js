@@ -12,7 +12,7 @@ const sendWebhook = require('./scripts/services/discordWebhooks.js');
 const isLocalIP = require('./scripts/isLocalIP.js');
 const log = require('./scripts/log.js');
 const config = require('./config.js');
-const { UFW_LOG_FILE, ABUSEIPDB_API_KEY, SERVER_ID, EXTENDED_LOGS, AUTO_UPDATE_ENABLED, AUTO_UPDATE_SCHEDULE, DISCORD_WEBHOOKS_ENABLED, DISCORD_WEBHOOKS_URL } = config.MAIN;
+const { UFW_LOG_FILE, SPAMVERIFY_API_KEY, SERVER_ID, EXTENDED_LOGS, AUTO_UPDATE_ENABLED, AUTO_UPDATE_SCHEDULE, DISCORD_WEBHOOKS_ENABLED, DISCORD_WEBHOOKS_URL } = config.MAIN;
 
 let fileOffset = 0;
 
@@ -23,13 +23,13 @@ const reportIp = async ({ srcIp, dpt = 'N/A', proto = 'N/A', id, timestamp }, ca
 	if (isIPReportedRecently(srcIp)) return;
 
 	try {
-		const { data: res } = await axios.post('/report', new URLSearchParams({
-			ip: srcIp,
+		const { data: res } = await axios.post('https://api.spamverify.com/v1/ip/report', {
+			ip_address: srcIp,
 			categories,
 			comment,
-		}), { headers: { 'Key': ABUSEIPDB_API_KEY } });
+		}, { headers: { 'Api-Key': SPAMVERIFY_API_KEY } });
 
-		log(`Reported ${srcIp} [${dpt}/${proto}]; ID: ${id}; Categories: ${categories}; Abuse: ${res.data.abuseConfidenceScore}%`, 1);
+		log(`Reported ${srcIp} [${dpt}/${proto}]; ID: ${id}; Categories: ${categories}; Abuse: ${res.data.threat_score}%`, 1);
 		return true;
 	} catch (err) {
 		const status = err.response?.status ?? 'unknown';
