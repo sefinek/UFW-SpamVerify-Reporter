@@ -23,7 +23,7 @@ const reportIp = async ({ srcIp, dpt = 'N/A', proto = 'N/A', id, timestamp }, ca
 	if (isIPReportedRecently(srcIp)) return;
 
 	try {
-		const { data: res } = await axios.post('https://api.spamverify.com/v1/ip/report', {
+		const { data: res } = await axios.post('/report', {
 			ip_address: srcIp,
 			categories,
 			comment,
