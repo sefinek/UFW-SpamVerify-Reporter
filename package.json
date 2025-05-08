@@ -1,6 +1,6 @@
 {
   "name": "ufw-spamverify-reporter",
-  "version": "0.1.4.beta.1",
+  "version": "0.1.4.beta.2",
   "description": "A tool (with a simple installer) that monitors UFW firewall logs in real time and reports IP addresses to the SpamVerify database.",
   "homepage": "https://github.com/sefinek/UFW-SpamVerify-Reporter#readme",
   "bugs": {
@@ -29,7 +29,7 @@
     "ufw-log-parser": "^0.1.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.25.1",
-    "globals": "^16.0.0"
+    "@eslint/js": "^9.26.0",
+    "globals": "^16.1.0"
   }
 }
