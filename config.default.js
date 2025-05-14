@@ -33,21 +33,12 @@ exports.REPORT_COMMENT = ({ date, srcIp, dstIp, proto, spt, dpt, In, Out, mac, l
 
 // See: https://spamverify.readme.io/reference/categories
 const categories = {
-	22: '14,22,18', // Port Scan | SSH | Brute-Force
-	80: '14,21', // Port Scan | Web App Attack
-	443: '14,21', // Port Scan | Web App Attack
-	8080: '14,21', // Port Scan | Web App Attack
-	25: '14,11', // Port Scan | Email Spam
-	21: '14,5,18', // Port Scan | FTP Brute-Force | Brute-Force
-	53: '14,1,2', // Port Scan | DNS Compromise | DNS Poisoning
-	23: '14,15,18', // Port Scan | Hacking | Brute-Force
-	3389: '14,15,18', // Port Scan | Hacking | Brute-Force
-	3306: '14,16', // Port Scan | SQL Injection
-	6666: '14,8', // Port Scan | Fraud VoIP
-	6667: '14,8', // Port Scan | Fraud VoIP
-	6668: '14,8', // Port Scan | Fraud VoIP
-	6669: '14,8', // Port Scan | Fraud VoIP
-	9999: '14,6', // Port Scan | Ping of Death
+	22: '8,14,10,18', // SSH: Port Scan, SSH, Brute Force, Phishing
+	23: '8,15,10,18', // Telnet: Port Scan, IoT Targeted, Brute Force, Phishing
+	21: '8,16,18', // FTP: Port Scan, FTP Brute Force, Phishing
+	53: '8,1,2', // DNS: Port Scan, DNS Compromise, DNS Poisoning
+	80: '8,13', // HTTP: Port Scan, Web App Attack
+	443: '8,13', // HTTPS: Port Scan, Web App Attack
 };
 
-exports.DETERMINE_CATEGORIES = ({ dpt }) => categories[dpt] || '14'; // Default: Port Scan
+exports.DETERMINE_CATEGORIES = ({ dpt }) => categories[dpt] || '8'; // Default: Port Scan
