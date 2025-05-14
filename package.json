@@ -1,6 +1,6 @@
 {
   "name": "ufw-spamverify-reporter",
-  "version": "0.1.4-beta.2",
+  "version": "0.1.4-beta.3",
   "homepage": "https://github.com/sefinek/UFW-SpamVerify-Reporter#readme",
   "bugs": {
     "url": "https://github.com/sefinek/UFW-SpamVerify-Reporter/issues"
@@ -23,8 +23,6 @@
     "axios-retry": "^4.5.0",
     "chokidar": "^4.0.3",
     "cron": "^4.3.0",
-    "csv-parse": "^5.6.0",
-    "csv-stringify": "^6.5.2",
     "ipaddr.js": "^2.2.0",
     "semver": "^7.7.2",
     "simple-git": "^3.27.0",

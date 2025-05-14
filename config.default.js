@@ -1,26 +1,27 @@
 exports.MAIN = {
-	// Server
+	/* --------------------------- Server --------------------------- */
+	SERVER_ID: null, // Server identifier (e.g., 'hp-terminal', 'pl-cluster', 'de1'). Use 'development' for testing only. 'production' has no effect. Use null to leave it unset.
+	EXTENDED_LOGS: false, // Specifies whether the script should display additional information in the logs.
 	UFW_LOG_FILE: '/var/log/ufw.log',
 	CACHE_FILE: '/var/cache/sefinek/ufw-spamverify-reporter.cache',
-	SERVER_ID: null, // The server name that will be visible in reports (e.g., homeserver1, de1). Leave as null if you don't want to define it.
-	EXTENDED_LOGS: false, // Specifies whether the script should display additional information in the logs.
 
-	// Network
-	IP_REFRESH_SCHEDULE: '0 */6 * * *', // CRON: How often the script should check the IP address assigned by the ISP to prevent accidental self-reporting. If you have a static IP, you can set it to '0 0 1 * *' (once a month). Default: every 6 hours
-	IPv6_SUPPORT: true, // Specifies whether the device has an assigned IPv6 address.
+	/* --------------------------- Network --------------------------- */
+	IP_ASSIGNMENT: 'dynamic', // IP assignment type: 'static' for a fixed IP, 'dynamic' if it may change over time.
+	IP_REFRESH_SCHEDULE: '0 */6 * * *', // Cron schedule for checking the public IP assigned by your ISP. Used only with dynamic IPs to prevent accidental self-reporting. If IP_ASSIGNMENT is set to 'static', the script will check your IP only once.
+	IPv6_SUPPORT: true, // IPv6 support: true if the device has a globally routable address assigned by the ISP.
 
-	// Reporting
-	SPAMVERIFY_API_KEY: '', // Secret API key for SpamVerify.
-	IP_REPORT_COOLDOWN: 12 * 60 * 60 * 1000, // Minimum time (12 hours in this example) that must pass before the same IP address can be reported again. Do not set values like 1 hour, as it wouldn't make sense due to rate limits.
+	/* --------------------------- Reports --------------------------- */
+	SPAMVERIFY_API_KEY: '',
+	IP_REPORT_COOLDOWN: 12 * 60 * 60 * 1000, // Minimum time between reports of the same IP. Must be >= 15 minutes. Do not set values like 1 hour, as it wouldn't make sense due to rate limits.
 
-	// Automatic Updates
-	AUTO_UPDATE_ENABLED: false, // Should the script automatically update to the latest version using 'git pull'? If enabled, monitor the script periodically — incompatibilities may occasionally occur with the config file.
-	AUTO_UPDATE_SCHEDULE: '0 18 * * *', // CRON: Schedule for automatic script updates. Default: every day at 18:00
+	/* --------------------------- Automatic Updates --------------------------- */
+	AUTO_UPDATE_ENABLED: false, // Automatic updates: true to enable auto-update via 'git pull', false to disable.
+	AUTO_UPDATE_SCHEDULE: '0 15,17,18,20 * * *', // Cron schedule for automatic script updates. Default: every day at 15:00, 17:00, 18:00, 20:00
 
-	// Discord Webhooks
-	DISCORD_WEBHOOKS_ENABLED: false, // Should the script send webhooks? These will include error reports, daily summaries, and other related information.
-	DISCORD_WEBHOOKS_URL: '',
-	DISCORD_WEBHOOK_USERNAME: 'SERVER_ID', // The name displayed as the message author on Discord. If you don't want to set it, leave the value as null. Providing SERVER_ID as a string will display this.MAIN.SERVER_ID.
+	/* --------------------------- Discord Webhooks --------------------------- */
+	DISCORD_WEBHOOK_ENABLED: false, // Enables sending Discord webhooks with error reports, execution status, and other events.
+	DISCORD_WEBHOOK_URL: '',
+	DISCORD_WEBHOOK_USERNAME: 'SERVER_ID', // Username shown as the message author. Use null for default. 'SERVER_ID' will resolve to this.MAIN.SERVER_ID.
 };
 
 
@@ -32,24 +33,21 @@ exports.REPORT_COMMENT = ({ date, srcIp, dstIp, proto, spt, dpt, In, Out, mac, l
 
 // See: https://spamverify.readme.io/reference/categories
 const categories = {
-	TCP: {
-		22: '8,14,10', // Port Scan | SSH | Brute Force
-		80: '8,13', // Port Scan | Web App Attack
-		443: '8,13', // Port Scan | Web App Attack
-		8080: '8,13', // Port Scan | Web App Attack
-		25: '8,7', // Port Scan | Email Spam
-		21: '8,16,10', // Port Scan | FTP Brute Force | Brute Force
-		53: '8,1,2', // Port Scan | DNS Compromise | DNS Poisoning
-		23: '8,22,10', // Port Scan | Hacking | Brute Force
-		3389: '8,22,10', // Port Scan | Hacking | Brute Force
-		3306: '8,23', // Port Scan | SQL Injection
-		6666: '8,19', // Port Scan | Fraud VoIP
-		6667: '8,19', // Port Scan | Fraud VoIP
-		6668: '8,19', // Port Scan | Fraud VoIP
-		6669: '8,19', // Port Scan | Fraud VoIP
-		9999: '8,17', // Port Scan | Ping of Death
-	},
-	UDP: {},
+	22: '14,22,18', // Port Scan | SSH | Brute-Force
+	80: '14,21', // Port Scan | Web App Attack
+	443: '14,21', // Port Scan | Web App Attack
+	8080: '14,21', // Port Scan | Web App Attack
+	25: '14,11', // Port Scan | Email Spam
+	21: '14,5,18', // Port Scan | FTP Brute-Force | Brute-Force
+	53: '14,1,2', // Port Scan | DNS Compromise | DNS Poisoning
+	23: '14,15,18', // Port Scan | Hacking | Brute-Force
+	3389: '14,15,18', // Port Scan | Hacking | Brute-Force
+	3306: '14,16', // Port Scan | SQL Injection
+	6666: '14,8', // Port Scan | Fraud VoIP
+	6667: '14,8', // Port Scan | Fraud VoIP
+	6668: '14,8', // Port Scan | Fraud VoIP
+	6669: '14,8', // Port Scan | Fraud VoIP
+	9999: '14,6', // Port Scan | Ping of Death
 };
 
-exports.DETERMINE_CATEGORIES = ({ proto, dpt }) => categories[proto]?.[dpt] || '8'; // Default: Port Scan
+exports.DETERMINE_CATEGORIES = ({ dpt }) => categories[dpt] || '14'; // Default: Port Scan
