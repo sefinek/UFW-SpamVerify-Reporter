@@ -1,6 +1,6 @@
 {
   "name": "ufw-spamverify-reporter",
-  "version": "0.1.4-beta.3",
+  "version": "0.2.0",
   "homepage": "https://github.com/sefinek/UFW-SpamVerify-Reporter#readme",
   "bugs": {
     "url": "https://github.com/sefinek/UFW-SpamVerify-Reporter/issues"
