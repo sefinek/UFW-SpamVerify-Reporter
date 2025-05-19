@@ -8,7 +8,7 @@ exports.MAIN = {
 	/* --------------------------- Network --------------------------- */
 	IP_ASSIGNMENT: 'dynamic', // IP assignment type: 'static' for a fixed IP, 'dynamic' if it may change over time.
 	IP_REFRESH_SCHEDULE: '0 */6 * * *', // Cron schedule for checking the public IP assigned by your ISP. Used only with dynamic IPs to prevent accidental self-reporting. If IP_ASSIGNMENT is set to 'static', the script will check your IP only once.
-	IPv6_SUPPORT: true, // IPv6 support: true if the device has a globally routable address assigned by the ISP.
+	IPv6_SUPPORT: false, // IPv6 support: true if the device has a globally routable address assigned by the ISP.
 
 	/* --------------------------- Reports --------------------------- */
 	SPAMVERIFY_API_KEY: '',
