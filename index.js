@@ -11,8 +11,9 @@ const { refreshServerIPs, getServerIPs } = require('./scripts/services/ipFetcher
 const { repoSlug, repoUrl, version } = require('./scripts/repo.js');
 const isSpecialPurposeIP = require('./scripts/isSpecialPurposeIP.js');
 const logger = require('./scripts/logger.js');
+const headers = require('./scripts/headers.js');
 const config = require('./config.js');
-const { UFW_LOG_FILE, SPAMVERIFY_API_KEY, SERVER_ID, EXTENDED_LOGS, AUTO_UPDATE_ENABLED, AUTO_UPDATE_SCHEDULE, DISCORD_WEBHOOK_ENABLED, DISCORD_WEBHOOK_URL } = config.MAIN;
+const { UFW_LOG_FILE, SERVER_ID, EXTENDED_LOGS, AUTO_UPDATE_ENABLED, AUTO_UPDATE_SCHEDULE, DISCORD_WEBHOOK_ENABLED, DISCORD_WEBHOOK_URL } = config.MAIN;
 
 let fileOffset = 0;
 
@@ -24,7 +25,7 @@ const reportIp = async ({ srcIp, dpt = 'N/A', proto = 'N/A', id, timestamp }, ca
 			ip_address: srcIp,
 			categories,
 			comment,
-		}, { headers: { 'Api-Key': SPAMVERIFY_API_KEY } });
+		}, headers.SPAMVERIFY);
 
 		logger.log(`Reported ${srcIp} [${dpt}/${proto}]; ID: ${id}; Categories: ${categories}; Abuse: ${res.data.threat_score}%`, 1);
 		return true;
