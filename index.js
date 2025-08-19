@@ -16,7 +16,7 @@ const { UFW_LOG_FILE, SERVER_ID, EXTENDED_LOGS, AUTO_UPDATE_ENABLED, AUTO_UPDATE
 
 let fileOffset = 0;
 
-const reportIp = async ({ srcIp, dpt = 'N/A', proto = 'N/A', id, timestamp, timestampRaw }, categories, comment) => {
+const reportIp = async ({ srcIp, dpt = 'N/A', proto = 'N/A', timestamp, timestampRaw }, categories, comment) => {
 	if (!srcIp) return logger.log('Missing source IP (srcIp)', 3);
 
 	try {
