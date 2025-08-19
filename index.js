@@ -18,6 +18,7 @@ let fileOffset = 0;
 
 const reportIp = async ({ srcIp, dpt = 'N/A', proto = 'N/A', id, timestamp }, categories, comment) => {
 	if (!srcIp) return logger.log('Missing source IP (srcIp)', 3);
+	console.log(timestamp);
 
 	try {
 		const { data: res } = await axiosService.post('/report', {
