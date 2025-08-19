@@ -18,7 +18,6 @@ let fileOffset = 0;
 
 const reportIp = async ({ srcIp, dpt = 'N/A', proto = 'N/A', id, timestamp }, categories, comment) => {
 	if (!srcIp) return logger.log('Missing source IP (srcIp)', 3);
-	console.log(timestamp);
 
 	try {
 		const { data: res } = await axiosService.post('/report', {
@@ -28,7 +27,7 @@ const reportIp = async ({ srcIp, dpt = 'N/A', proto = 'N/A', id, timestamp }, ca
 			timestamp,
 		});
 
-		logger.log(`Reported ${srcIp} [${dpt}/${proto}]; ID: ${id}; Categories: ${categories}; Abuse: ${res.data.threat_score}%`, 1);
+		logger.log(`Reported ${srcIp} [${dpt}/${proto}]; ID: ${id}; Categories: ${categories}; Abuse: ${res.data.threat_score}%; Timestamp: ${timestamp}`, 1);
 		return true;
 	} catch (err) {
 		const status = err.response?.status ?? 'unknown';
