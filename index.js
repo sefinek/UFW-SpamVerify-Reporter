@@ -5,13 +5,12 @@ const fs = require('node:fs');
 const chokidar = require('chokidar');
 const { parseUfwLog } = require('ufw-log-parser');
 const banner = require('./scripts/banners/ufw.js');
-const { axios } = require('./scripts/services/axios.js');
+const { axiosService } = require('./scripts/services/axios.js');
 const { reportedIPs, loadReportedIPs, saveReportedIPs, isIPReportedRecently, markIPAsReported } = require('./scripts/services/cache.js');
 const { refreshServerIPs, getServerIPs } = require('./scripts/services/ipFetcher.js');
-const { repoSlug, repoUrl, version } = require('./scripts/repo.js');
+const { repoSlug, repoUrl } = require('./scripts/repo.js');
 const isSpecialPurposeIP = require('./scripts/isSpecialPurposeIP.js');
 const logger = require('./scripts/logger.js');
-const headers = require('./scripts/headers.js');
 const config = require('./config.js');
 const { UFW_LOG_FILE, SERVER_ID, EXTENDED_LOGS, AUTO_UPDATE_ENABLED, AUTO_UPDATE_SCHEDULE, DISCORD_WEBHOOK_ENABLED, DISCORD_WEBHOOK_URL } = config.MAIN;
 
@@ -21,11 +20,12 @@ const reportIp = async ({ srcIp, dpt = 'N/A', proto = 'N/A', id, timestamp }, ca
 	if (!srcIp) return logger.log('Missing source IP (srcIp)', 3);
 
 	try {
-		const { data: res } = await axios.post('/report', {
+		const { data: res } = await axiosService.post('/report', {
 			ip_address: srcIp,
 			categories,
 			comment,
-		}, headers.SPAMVERIFY);
+			timestamp,
+		});
 
 		logger.log(`Reported ${srcIp} [${dpt}/${proto}]; ID: ${id}; Categories: ${categories}; Abuse: ${res.data.threat_score}%`, 1);
 		return true;
@@ -84,7 +84,7 @@ const processLogLine = async (line, test = false) => {
 };
 
 (async () => {
-	banner(`UFW To SpamVerify (v${version})`);
+	banner();
 
 	// Auto updates
 	if (AUTO_UPDATE_ENABLED && AUTO_UPDATE_SCHEDULE && SERVER_ID !== 'development') {
