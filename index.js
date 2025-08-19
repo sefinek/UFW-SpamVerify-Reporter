@@ -16,7 +16,7 @@ const { UFW_LOG_FILE, SERVER_ID, EXTENDED_LOGS, AUTO_UPDATE_ENABLED, AUTO_UPDATE
 
 let fileOffset = 0;
 
-const reportIp = async ({ srcIp, dpt = 'N/A', proto = 'N/A', timestamp, timestampRaw }, categories, comment) => {
+const reportIp = async ({ srcIp, dpt = 'N/A', proto = 'N/A' }, categories, comment) => {
 	if (!srcIp) return logger.log('Missing source IP (srcIp)', 3);
 
 	try {
@@ -24,10 +24,9 @@ const reportIp = async ({ srcIp, dpt = 'N/A', proto = 'N/A', timestamp, timestam
 			ip_address: srcIp,
 			categories,
 			comment,
-			timestamp,
 		});
 
-		logger.log(`Reported ${srcIp} [${dpt}/${proto}]; Categories: ${categories}; Abuse: ${res.data.threat_score}%; Raw timestamp: ${timestampRaw}; Parsed: ${timestamp}`, 1);
+		logger.log(`Reported ${srcIp} [${dpt}/${proto}]; Categories: ${categories}; Abuse: ${res.data.threat_score}%`, 1);
 		return true;
 	} catch (err) {
 		const status = err.response?.status ?? 'unknown';
