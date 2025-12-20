@@ -33,13 +33,25 @@ exports.REPORT_COMMENT = ({ date, srcIp, dstIp, proto, spt, dpt, In, Out, mac, l
 
 
 // See: https://spamverify.readme.io/reference/categories
-const categories = {
-	22: '8,14,10,18', // SSH: Port Scan, SSH, Brute Force, Phishing
-	23: '8,15,10,18', // Telnet: Port Scan, IoT Targeted, Brute Force, Phishing
-	21: '8,16,18', // FTP: Port Scan, FTP Brute Force, Phishing
-	53: '8,1,2', // DNS: Port Scan, DNS Compromise, DNS Poisoning
-	80: '8,13', // HTTP: Port Scan, Web App Attack
-	443: '8,13', // HTTPS: Port Scan, Web App Attack
+const { FLAGS, createFlagCollection } = require('./scripts/flags.js');
+const CATEGORIES = {
+	21: [FLAGS.PORT_SCAN, FLAGS.FTP],
+	22: [FLAGS.PORT_SCAN, FLAGS.SSH],
+	23: [FLAGS.PORT_SCAN, FLAGS.TELNET],
+	25: [FLAGS.PORT_SCAN, FLAGS.EMAIL],
+	80: [FLAGS.PORT_SCAN, FLAGS.HTTP],
+	8080: [FLAGS.PORT_SCAN, FLAGS.HTTP],
+	443: [FLAGS.PORT_SCAN, FLAGS.HTTP],
+	110: [FLAGS.PORT_SCAN, FLAGS.EMAIL],
+	143: [FLAGS.PORT_SCAN, FLAGS.EMAIL],
+	445: [FLAGS.PORT_SCAN, FLAGS.SMB],
+	27017: [FLAGS.PORT_SCAN, FLAGS.MONGODB],
+	6379: [FLAGS.PORT_SCAN, FLAGS.REDIS],
+	3389: [FLAGS.PORT_SCAN, FLAGS.RDP],
 };
 
-exports.DETERMINE_CATEGORIES = ({ dpt }) => categories[dpt] || '8'; // Default: Port Scan
+exports.DETERMINE_CATEGORIES = ({ dpt }) => {
+	const set = createFlagCollection();
+	set.add(...(CATEGORIES[dpt] || [FLAGS.PORT_SCAN]));
+	return set.toString();
+};
