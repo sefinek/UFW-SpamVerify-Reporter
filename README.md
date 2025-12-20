@@ -65,8 +65,9 @@ git clone --recurse-submodules https://github.com/sefinek/UFW-SpamVerify-Reporte
 cd UFW-SpamVerify-Reporter
 npm install
 cp config.default.js config.js
-sudo chmod 644 /var/log/ufw.log
-npm install -g pm2
+sudo chown syslog:"$USER" "$ufw_log_path"
+sudo chmod 640 "$ufw_log_path"
+npm install -g pm2@latest
 sudo mkdir -p /var/log/ufw-spamverify
 sudo chown -R "$USER":"$USER" /var/log/ufw-spamverify
 pm2 start

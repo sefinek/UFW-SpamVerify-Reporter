@@ -232,12 +232,13 @@ sudo chown -R "$USER":"$USER" /var/log/ufw-spamverify
 
 # Change permissions for UFW log file
 echo "🔒 Changing permissions for $ufw_log_path..."
-sudo chmod 644 "$ufw_log_path"
+sudo chown syslog:"$USER" "$ufw_log_path"
+sudo chmod 640 "$ufw_log_path"
 
 
 # Install PM2
 echo "📦 Installing PM2..."
-sudo npm install pm2 -g --silent
+sudo npm install pm2@latest -g --silent
 
 
 # Configure PM2
