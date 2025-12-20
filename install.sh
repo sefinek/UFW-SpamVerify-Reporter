@@ -226,8 +226,8 @@ mkdir -p /opt
 cd /opt || { echo "❌ Failed to change directory to '/opt'. Exiting..."; exit 1; }
 
 # Migrate from old directory name if exists
-if [ -d "UFW-SpamVerify-Reporter" ] && [ ! -d "ufw-spamverify-reporter" ]; then
-    echo "📦 Migrating from old directory name (UFW-SpamVerify-Reporter → ufw-spamverify-reporter)..."
+if [ -d "UFW-SpamVerify-Reporter" ] && [ ! -d "ufw-spamverify" ]; then
+    echo "📦 Migrating from old directory name (UFW-SpamVerify-Reporter → ufw-spamverify)..."
 
     # Stop UFW-SpamVerify reporter process if running
     if command -v pm2 &>/dev/null; then
@@ -238,21 +238,21 @@ if [ -d "UFW-SpamVerify-Reporter" ] && [ ! -d "ufw-spamverify-reporter" ]; then
         fi
     fi
 
-    sudo mv UFW-SpamVerify-Reporter ufw-spamverify-reporter
+    sudo mv UFW-SpamVerify-Reporter ufw-spamverify
     echo "✅ Migration completed"
 fi
 
-if [ ! -d "ufw-spamverify-reporter" ]; then
+if [ ! -d "ufw-spamverify" ]; then
     echo "📥 Cloning the repository..."
-    sudo git clone --recurse-submodules https://github.com/sefinek/UFW-SpamVerify-Reporter.git ufw-spamverify-reporter || { echo "❌ Failed to clone the repository. Exiting..."; exit 1; }
+    sudo git clone --recurse-submodules https://github.com/sefinek/UFW-SpamVerify-Reporter.git ufw-spamverify || { echo "❌ Failed to clone the repository. Exiting..."; exit 1; }
 else
     echo "✅ The repository already exists"
 fi
 
-sudo chown "$USER":"$USER" /opt/ufw-spamverify-reporter -R
+sudo chown "$USER":"$USER" /opt/ufw-spamverify -R
 
 echo "📥 Pulling latest changes..."
-cd ufw-spamverify-reporter || { echo "❌ Failed to change directory to 'ufw-spamverify-reporter'. Exiting..."; exit 1; }
+cd ufw-spamverify || { echo "❌ Failed to change directory to 'ufw-spamverify'. Exiting..."; exit 1; }
 git pull || { echo "❌ Failed to pull the latest changes. Exiting..."; exit 1; }
 
 # Install npm dependencies
