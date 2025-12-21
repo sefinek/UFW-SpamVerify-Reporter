@@ -35,23 +35,35 @@ exports.REPORT_COMMENT = ({ date, srcIp, dstIp, proto, spt, dpt, In, Out, mac, l
 // See: https://spamverify.readme.io/reference/categories
 const { FLAGS, createFlagCollection } = require('./scripts/flags.js');
 const CATEGORIES = {
-	21: [FLAGS.PORT_SCAN, FLAGS.FTP],
-	22: [FLAGS.PORT_SCAN, FLAGS.SSH],
-	23: [FLAGS.PORT_SCAN, FLAGS.TELNET],
-	25: [FLAGS.PORT_SCAN, FLAGS.EMAIL],
-	80: [FLAGS.PORT_SCAN, FLAGS.HTTP],
-	8080: [FLAGS.PORT_SCAN, FLAGS.HTTP],
-	443: [FLAGS.PORT_SCAN, FLAGS.HTTP],
-	110: [FLAGS.PORT_SCAN, FLAGS.EMAIL],
-	143: [FLAGS.PORT_SCAN, FLAGS.EMAIL],
-	445: [FLAGS.PORT_SCAN, FLAGS.SMB],
-	27017: [FLAGS.PORT_SCAN, FLAGS.MONGODB],
-	6379: [FLAGS.PORT_SCAN, FLAGS.REDIS],
-	3389: [FLAGS.PORT_SCAN, FLAGS.RDP],
+	22: [FLAGS.SSH],
+	21: [FLAGS.FTP],
+
+	23: [FLAGS.IOT_TARGETED],
+	2323: [FLAGS.IOT_TARGETED],
+	7547: [FLAGS.IOT_TARGETED],
+	5555: [FLAGS.IOT_TARGETED],
+
+	25: [FLAGS.EMAIL_SPAM],
+	465: [FLAGS.EMAIL_SPAM],
+	587: [FLAGS.EMAIL_SPAM],
+
+	5060: [FLAGS.FRAUD_VOIP],
+	5061: [FLAGS.FRAUD_VOIP],
+
+	3389: [FLAGS.BRUTE_FORCE],
+
+	445: [FLAGS.PORT_SCAN],
+	139: [FLAGS.PORT_SCAN],
+
+	27017: [FLAGS.PORT_SCAN],
+	6379: [FLAGS.PORT_SCAN],
+
+	80: [FLAGS.PORT_SCAN],
+	443: [FLAGS.PORT_SCAN],
 };
 
 exports.DETERMINE_CATEGORIES = ({ dpt }) => {
 	const set = createFlagCollection();
 	set.add(...(CATEGORIES[dpt] || [FLAGS.PORT_SCAN]));
-	return set.toString();
+	return set.toString('SpamVerify');
 };

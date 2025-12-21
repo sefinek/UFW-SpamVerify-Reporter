@@ -1,4 +1,4 @@
-# 🛡️ UFW SpamVerify Reporter (temporarily broken, check this repo tomorrow)
+# 🛡️ UFW SpamVerify Reporter
 An integration tool designed to analyze UFW logs and report IP addresses blocked by the firewall to the [SpamVerify](https://spamverify.com) database.  
 To prevent excessive reporting of the same IP address within a short time period, the tool uses a temporary cache file to track previously reported IP addresses.
 
