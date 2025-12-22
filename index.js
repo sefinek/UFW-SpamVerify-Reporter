@@ -17,7 +17,7 @@ const { UFW_LOG_FILE, SERVER_ID, EXTENDED_LOGS, AUTO_UPDATE_ENABLED, AUTO_UPDATE
 let fileOffset = 0;
 
 const reportIp = async ({ srcIp, dpt = 'N/A', proto = 'N/A' }, categories, comment) => {
-	if (!srcIp) return logger.log('Missing source IP (srcIp)', 3);
+	if (!srcIp) return logger.error('Missing source IP (srcIp)', { ping: true });
 
 	try {
 		const { data: res } = await axiosService.post('/report', {
@@ -26,29 +26,37 @@ const reportIp = async ({ srcIp, dpt = 'N/A', proto = 'N/A' }, categories, comme
 			comment,
 		});
 
-		logger.log(`Reported ${srcIp} [${dpt}/${proto}]; Categories: ${categories}; Abuse: ${res.data.threat_score}%`, 1);
+		logger.success(`Reported ${srcIp} [${dpt}/${proto}]; Categories: ${categories}; Abuse: ${res.data.threat_score}%`);
 		return true;
 	} catch (err) {
-		const status = err.response?.status ?? 'unknown';
-		logger.log(`Failed to report ${srcIp} [${dpt}/${proto}]; ${err.response?.data ? JSON.stringify(err.response.data) : err.message}`, status === 429 ? 0 : 3);
+		const failureMsg = `Failed to report ${srcIp} [${dpt}/${proto}]; ${err.response?.data?.errors ? JSON.stringify(err.response.data.errors) : err.message}`;
+		err.response?.status === 429 ? logger.info(failureMsg) : logger.error(failureMsg);
 	}
 };
 
 const processLogLine = async (line, test = false) => {
-	if (!line.includes('[UFW BLOCK]')) return logger.log(`Ignoring invalid line: ${line}`, 2);
+	if (!line.includes('[UFW BLOCK]')) return logger.warn(`Ignoring invalid line: ${line}`);
 
 	const data = parseUfwLog(line);
 	const { srcIp, proto, dpt } = data;
-	if (!srcIp) return logger.log(`Missing SRC in the log line: ${line}`, 3);
+	if (!srcIp) return logger.error(`Missing SRC in the log line: ${line}`, { ping: true });
 
 	// Check IP
 	const ips = getServerIPs();
-	if (!Array.isArray(ips)) return logger.log(`For some reason, 'ips' from 'getServerIPs()' is not an array. Received: ${ips}`, 3, true);
+	if (!Array.isArray(ips)) return logger.error(`For some reason, 'ips' from 'getServerIPs()' is not an array. Received: ${ips}`, { ping: true });
 
-	if (ips.includes(srcIp)) return logger.log(`Ignoring own IP address: PROTO=${proto?.toLowerCase()} SRC=${srcIp} DPT=${dpt} ID=${data.id}`, 0, EXTENDED_LOGS);
-	if (isSpecialPurposeIP(srcIp)) return logger.log(`Ignoring local IP address: PROTO=${proto?.toLowerCase()} SRC=${srcIp} DPT=${dpt} ID=${data.id}`, 0, EXTENDED_LOGS);
+	if (ips.includes(srcIp)) {
+		if (EXTENDED_LOGS) logger.info(`Ignoring own IP address: PROTO=${proto?.toLowerCase()} SRC=${srcIp} DPT=${dpt} ID=${data.id}`);
+		return;
+	}
+
+	if (isSpecialPurposeIP(srcIp)) {
+		if (EXTENDED_LOGS) logger.info(`Ignoring local IP address: PROTO=${proto?.toLowerCase()} SRC=${srcIp} DPT=${dpt} ID=${data.id}`);
+		return;
+	}
+
 	if (proto === 'UDP') {
-		if (EXTENDED_LOGS) logger.log(`Skipping UDP traffic: SRC=${srcIp} DPT=${dpt} ID=${data.id}`);
+		if (EXTENDED_LOGS) logger.info(`Skipping UDP traffic: SRC=${srcIp} DPT=${dpt} ID=${data.id}`);
 		return;
 	}
 
@@ -69,7 +77,7 @@ const processLogLine = async (line, test = false) => {
 			(seconds || (!days && !hours && !minutes)) && `${seconds}s`,
 		].filter(Boolean).join(' ');
 
-		if (EXTENDED_LOGS) logger.log(`${srcIp} was last reported on ${new Date(lastReportedTime * 1000).toLocaleString()} (${timeAgo} ago)`);
+		if (EXTENDED_LOGS) logger.info(`${srcIp} was last reported on ${new Date(lastReportedTime * 1000).toLocaleString()} (${timeAgo} ago)`);
 		return;
 	}
 
@@ -100,7 +108,7 @@ const processLogLine = async (line, test = false) => {
 
 	// Check UFW_LOG_FILE
 	if (!fs.existsSync(UFW_LOG_FILE)) {
-		logger.log(`Log file ${UFW_LOG_FILE} does not exist`, 3);
+		logger.error(`Log file ${UFW_LOG_FILE} does not exist`, { ping: true });
 		return;
 	}
 
@@ -111,7 +119,7 @@ const processLogLine = async (line, test = false) => {
 			const stats = fs.statSync(path);
 			if (stats.size < fileOffset) {
 				fileOffset = 0;
-				logger.log('The file has been truncated, and the offset has been reset');
+				logger.info('The file has been truncated, and the offset has been reset');
 			}
 
 			fs.createReadStream(path, { start: fileOffset, encoding: 'utf8' }).on('data', chunk => {
@@ -126,7 +134,7 @@ const processLogLine = async (line, test = false) => {
 
 	// Ready
 	await logger.webhook(`[${repoSlug}](${repoUrl}) was successfully started!`, 0x59D267);
-	logger.log(`Ready! Now monitoring: ${UFW_LOG_FILE}`, 1);
+	logger.success(`Ready! Now monitoring: ${UFW_LOG_FILE}`);
 	process.send?.('ready');
 })();
 
