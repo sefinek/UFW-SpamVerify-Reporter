@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-#############################################################
-#    Copyright 2025 (c) by Sefinek All rights reserved.     #
-#                   https://sefinek.net                     #
-#############################################################
+##################################################################
+#    Copyright 2025-2026 (c) by Sefinek All rights reserved.     #
+#                    https://sefinek.net                         #
+##################################################################
 
 cat << "EOF"
 This installer will configure UFW-SpamVerify-Reporter, a tool that analyzes UFW logs and
@@ -13,7 +13,7 @@ server to stay updated on the latest changes and more: https://discord.gg/53DBjT
 📩 Author        : Sefinek <contact@sefinek.net> (https://sefinek.net)
 🔵 Discord       : https://discord.gg/RVH8UXgmzs
 😺 GitHub Issues : https://github.com/sefinek/UFW-SpamVerify-Reporter/issues
-📦 Last update   : 20.12.2025
+📦 Last update   : 21.01.2026
 ============================================================================================
 
 EOF
@@ -122,7 +122,7 @@ ask_config() {
                     echo "$result"
                     return 0
                 else
-                    echo "❌ Must be 'true' or 'false'"
+                    echo "❌ Must be 'true' or 'false'" >&2
                 fi
                 ;;
             number)
@@ -130,7 +130,7 @@ ask_config() {
                     echo "$result"
                     return 0
                 else
-                    echo "❌ Must be a valid number"
+                    echo "❌ Must be a valid number" >&2
                 fi
                 ;;
             url)
@@ -138,7 +138,7 @@ ask_config() {
                     echo "$result"
                     return 0
                 else
-                    echo "❌ Must be a valid URL starting with http:// or https://"
+                    echo "❌ Must be a valid URL starting with http:// or https://" >&2
                 fi
                 ;;
             cron)
@@ -146,7 +146,7 @@ ask_config() {
                     echo "$result"
                     return 0
                 else
-                    echo "❌ Invalid cron format. Expected: 'minute hour day month weekday'"
+                    echo "❌ Invalid cron format. Expected: 'minute hour day month weekday'" >&2
                 fi
                 ;;
             static_dynamic)
@@ -154,7 +154,7 @@ ask_config() {
                     echo "$result"
                     return 0
                 else
-                    echo "❌ Must be 'static' or 'dynamic'"
+                    echo "❌ Must be 'static' or 'dynamic'" >&2
                 fi
                 ;;
             *)
@@ -249,6 +249,7 @@ else
     echo "✅ The repository already exists"
 fi
 
+sudo mkdir -p /opt/ufw-spamverify/tmp
 sudo chown "$USER":"$USER" /opt/ufw-spamverify -R
 
 echo "📥 Pulling latest changes..."
@@ -372,7 +373,7 @@ while true; do
     if awk "BEGIN {exit !($cooldown_hours >= 0.25)}"; then
         break
     else
-        echo "❌ Minimum cooldown is 0.25 hours (15 minutes)"
+        echo "❌ Minimum cooldown is 0.25 hours (15 minutes)" >&2
     fi
 done
 
@@ -490,11 +491,7 @@ echo -e "   After editing the configuration file, restart the process: pm2 resta
 
 echo -e "\n====================================== Summary ======================================"
 echo "🖥️ Server ID          : ${server_id//\'/}"
-if [[ ${#api_token} -gt 16 ]]; then
-    echo "🔑 API Key            : ${api_token:0:8}...${api_token: -4}"
-else
-    echo "🔑 API Key            : ${api_token:0:4}...${api_token: -4}"
-fi
+echo "🔑 API Key            : $api_token"
 echo "📂 UFW Log File       : $ufw_log_path"
 echo "💾 Cache File         : $cache_file"
 echo "🌐 IP Assignment      : $ip_assignment"
